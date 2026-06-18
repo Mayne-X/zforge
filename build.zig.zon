@@ -1,0 +1,10 @@
+.{
+    .name = "zforge",
+    .version = "0.0.1",
+    .dependencies = .{
+        .clap = .{
+            .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/0.9.0.tar.gz",
+            .hash = "12204c35e45a2786638062a4a753066f122709e8674d8296a79857d4b0051e808381",
+        },
+    },
+}
