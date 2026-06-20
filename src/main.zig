@@ -9,6 +9,7 @@ pub fn main() !void {
     const params = comptime clap.parseParamsComptime(
         \\-h, --help           Display this help and exit.
         \\-n, --name <str>     The name of the project.
+        \\-t, --type <str>     The project type (basic, web, tui).
         \\<str>...
     );
 
@@ -26,15 +27,17 @@ pub fn main() !void {
         return clap.help(std.io.getStdOut().writer(), clap.Help, &params, .{});
     }
 
-    if (res.args.name) |name| {
-        try createProject(allocator, name);
-    } else {
-        std.io.getStdOut().writer().print("Please specify a project name using --name\n", .{}) catch {};
-    }
+    const name = res.args.name orelse {
+        std.io.getStdErr().writer().print("Error: Please specify a project name using --name\n", .{}) catch {};
+        return;
+    };
+    
+    const proj_type = res.args.type orelse "basic";
+
+    try createProject(allocator, name, proj_type);
 }
 
-fn createProject(allocator: std.mem.Allocator, name: []const u8) !void {
-    // Create directory
+fn createProject(allocator: std.mem.Allocator, name: []const u8, proj_type: []const u8) !void {
     std.fs.cwd().makeDir(name) catch |err| {
         if (err == error.PathAlreadyExists) {
             std.debug.print("Error: Directory '{s}' already exists.\n", .{name});
@@ -46,43 +49,59 @@ fn createProject(allocator: std.mem.Allocator, name: []const u8) !void {
     var dir = try std.fs.cwd().openDir(name, .{});
     defer dir.close();
 
-    // Create src directory
     try dir.makeDir("src");
-
-    // Create main.zig
-    const main_content = 
-        \\const std = @import("std");
-        \\
-        \\pub fn main() !void {
-        \\    std.debug.print("Hello, World!\n", .{});
-        \\}
-    ;
-    
     var src_dir = try dir.openDir("src", .{});
     defer src_dir.close();
-    
-    const main_file = try src_dir.createFile("main.zig", .{});
+
+    var main_file = try src_dir.createFile("main.zig", .{});
     defer main_file.close();
-    try main_file.writer().writeAll(main_content);
-
-    // Create build.zig
-    const build_content = 
-        \\const std = @import("std");
-        \\
-        \\pub fn build(b: *std.Build) void {
-        \\    const exe = b.addExecutable(.{
-        \\        .name = "my-project",
-        \\        .root_source_file = .{ .path = "src/main.zig" },
-        \\        .target = b.standardTargetOptions(.{}),
-        \\        .optimize = b.standardOptimizeOption(.{}),
-        \\    });
-        \\    b.installArtifact(exe);
-        \\}
-    ;
-
-    const build_file = try dir.createFile("build.zig", .{});
+    
+    var build_file = try dir.createFile("build.zig", .{});
     defer build_file.close();
-    try build_file.writer().writeAll(build_content);
 
-    std.debug.print("Project '{s}' scaffolded successfully!\n", .{name});
+    if (std.mem.eql(u8, proj_type, "web")) {
+        try main_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn main() !void {
+            \\    std.debug.print("Starting Web Server on :8080...\n", .{});
+            \\}
+        );
+        try build_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn build(b: *std.Build) void {
+            \\    const exe = b.addExecutable(.{ .name = "web-server", .root_source_file = .{ .path = "src/main.zig" }, .target = b.standardTargetOptions(.{}), .optimize = b.standardOptimizeOption(.{}) });
+            \\    b.installArtifact(exe);
+            \\}
+        );
+    } else if (std.mem.eql(u8, proj_type, "tui")) {
+        try main_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn main() !void {
+            \\    std.debug.print("Initializing TUI interface...\n", .{});
+            \\}
+        );
+        try build_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn build(b: *std.Build) void {
+            \\    const exe = b.addExecutable(.{ .name = "tui-app", .root_source_file = .{ .path = "src/main.zig" }, .target = b.standardTargetOptions(.{}), .optimize = b.standardOptimizeOption(.{}) });
+            \\    b.installArtifact(exe);
+            \\}
+        );
+    } else {
+        try main_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn main() !void {
+            \\    std.debug.print("Hello, World!\n", .{});
+            \\}
+        );
+        try build_file.writer().writeAll(
+            \\const std = @import("std");
+            \\pub fn build(b: *std.Build) void {
+            \\    const exe = b.addExecutable(.{ .name = "basic-project", .root_source_file = .{ .path = "src/main.zig" }, .target = b.standardTargetOptions(.{}), .optimize = b.standardOptimizeOption(.{}) });
+            \\    b.installArtifact(exe);
+            \\}
+        );
+    }
+
+    std.debug.print("Project '{s}' ({s}) scaffolded successfully!\n", .{name, proj_type});
 }

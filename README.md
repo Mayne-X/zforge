@@ -6,34 +6,38 @@ Stop manually setting up your `build.zig` files. Initialize new Zig projects wit
 
 ---
 
-### 🚀 Features
+## 🚀 Features
 - **Lightning Fast:** Written in Zig, generating projects instantly.
 - **Minimalist:** No heavy dependencies.
-- **Production Ready:** Scaffolds standard Zig project structures with `src/main.zig` and `build.zig`.
+- **Templates:** Supports multiple project templates out of the box.
 
 ---
 
-### 🛠️ Quick Start
+## 🛠️ Usage
 
+### Initialize a new project
 ```bash
-# Initialize a new project
-./zforge --name my-zig-project
+# Basic project
+./zforge --name my-project --type basic
+
+# Web server template
+./zforge --name my-web-server --type web
+
+# TUI application template
+./zforge --name my-tui-app --type tui
 ```
 
-This will create a new directory `my-zig-project/` containing:
-- `src/main.zig` (Hello World entry)
-- `build.zig` (Standard Zig build script)
+### Available Templates
+| Template | Description |
+|:---------|:------------|
+| `basic` | Standard "Hello World" entry point |
+| `web` | Boilerplate for a web server |
+| `tui` | Boilerplate for a Terminal User Interface |
 
 ---
 
-### 📖 About & SEO
-**Description (For GitHub About box):**
-> A fast, 100% Zig-native project scaffolder. Generate production-ready Zig project structures instantly with interactive CLI commands.
-
-**Tags (For GitHub Topics):**
-`zig`, `cli`, `scaffolder`, `developer-tools`, `ziglang`, `native`
-
----
-
-### 🏗️ Contributing
+## 🏗️ Contributing
 Contributions are welcome! Please feel free to open a PR for new templates or interactive features.
+
+## License
+MIT License - see [LICENSE](LICENSE) file.
